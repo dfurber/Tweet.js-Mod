@@ -29,11 +29,12 @@
 			auto_join_text_ing: "i am",               // [string]   auto tense for present tense: "i was" surfing
 			auto_join_text_reply: "i replied to",     // [string]   auto tense for replies: "i replied to" @someone "with"
 			auto_join_text_url: "i was looking at",   // [string]   auto tense for urls: "i was looking at" http:...
+			empty_text: 'No tweets were found',       // [string]   text to show if there are no results
 			loading_text: null,                       // [string]   optional loading text, displayed while tweets load
 			refresh_interval: null ,                  // [integer]  optional number of seconds after which to reload tweets
 			twitter_url: "twitter.com",               // [string]   custom twitter url, if any (apigee, etc.)
 			twitter_api_url: "api.twitter.com",       // [string]   custom twitter api url, if any (apigee, etc.)
-			twitter_search_url: "search.twitter.com", // [string]   custom twitter search url, if any (apigee, etc.)
+			twitter_search_url: "api.twitter.com",    // [string]   custom twitter search url, if any (apigee, etc.)
 			template: "{avatar}{time}{join}{text}",   // [string or function] template used to construct each tweet <li> - see code for available vars
 			comparator: function(tweet1, tweet2) {    // [function] comparator used to sort tweets (see Array.sort)
 				return tweet2["tweet_time"] - tweet1["tweet_time"];
@@ -191,11 +192,10 @@
 				var query = (s.query || 'from:'+s.username.join(' OR from:'));
 				return {
 					host: s.twitter_search_url,
-					url: "/search.json",
+					url: "/1.1/search/tweets.json",
 					parameters: $.extend({}, defaults, {
-						page: s.page,
 						q: query,
-						rpp: count
+						count: count
 					})
 				};
 			}
@@ -300,6 +300,10 @@
 							children('li:even').addClass('tweet_odd');
 
 						if (s.outro_text) list.after(outro);
+                        $(widget).bind('empty', function(){
+                            if (tweets.length === 0)
+                                list.html(s.empty_text);
+                        });
 						$(widget).trigger("loaded").trigger((tweets ? "empty" : "full"));
 						if (s.refresh_interval) {
 							window.setTimeout(function() { $(widget).trigger("tweet:load"); }, 1000 * s.refresh_interval);
